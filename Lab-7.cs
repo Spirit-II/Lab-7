@@ -1,29 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 namespace Lab_7_1
 {
-    public static class FileTasks
+    [Serializable]
+    public struct LuggageItem
     {
-        // Метод для проверки ввода целого числа
-        private static int ReadIntWithValidation(string prompt)
-        {
-            int value;
-            while (true)
-            {
-                Console.Write(prompt);
-                if (int.TryParse(Console.ReadLine(), out value))
-                    return value;
-                Console.WriteLine("Ошибка: введите корректное целое число.");
-            }
-        }
+        public string Name;
+        public double Weight;
+    }
 
-        // Задание 1: Текстовые файлы (одно число в строке)
-        public static void FillFileWithRandomIntsOnePerLine(string filePath, int count)
+    /// <summary>
+    /// Информация о пассажире.
+    /// </summary>
+    [Serializable]
+    public class Passenger
+    {
+        public string FullName;
+
+        public LuggageItem[] Luggage;
+    }
+    internal class FileTasks
+    {
+        /// Задание 1: Текстовые файлы (одно число в строке)
+        public static void CreateNum(string filePath, int count)
         {
             Random random = new Random();
             using (StreamWriter writer = new StreamWriter(filePath))
@@ -33,7 +36,7 @@ namespace Lab_7_1
             }
         }
 
-        public static int FindDifferenceMaxMin(string filePath)
+        public static int FindMaxMin(string filePath)
         {
             int min = int.MaxValue, max = int.MinValue;
             using (StreamReader reader = new StreamReader(filePath))
@@ -51,8 +54,8 @@ namespace Lab_7_1
             return max - min;
         }
 
-        // Задание 2: Текстовые файлы (несколько чисел в строке)
-        public static void FillFileWithRandomIntsMultiplePerLine(string filePath, int lines, int numsPerLine)
+        /// Задание 2: Текстовые файлы (несколько чисел в строке)
+        public static void CreateNums(string filePath, int lines, int numsPerLine)
         {
             Random random = new Random();
             using (StreamWriter writer = new StreamWriter(filePath))
@@ -66,7 +69,7 @@ namespace Lab_7_1
             }
         }
 
-        public static int FindMinElement(string filePath)
+        public static int FindMin(string filePath)
         {
             int min = int.MaxValue;
             using (StreamReader reader = new StreamReader(filePath))
@@ -85,11 +88,11 @@ namespace Lab_7_1
             return min;
         }
 
-        // Задание 3: Текстовые файлы
-        public static void FillTextFileWithRandomText(string filePath, int lines)
+        /// Задание 3: Текстовые файлы
+        public static void CreateText(string filePath, int lines)
         {
             Random random = new Random();
-            string[] words = { "apple", "banana", "cherry", "date", "elderberry" };
+            string[] words = { "apple", "banana", "Gru", "date", "kodstyle" };
             using (StreamWriter writer = new StreamWriter(filePath))
             {
                 for (int i = 0; i < lines; i++)
@@ -97,7 +100,7 @@ namespace Lab_7_1
             }
         }
 
-        public static void RewriteFileStartingWithChar(string inputPath, string outputPath, char startChar)
+        public static void WriteChar(string inputPath, string outputPath, char startChar)
         {
             using (StreamReader reader = new StreamReader(inputPath))
             using (StreamWriter writer = new StreamWriter(outputPath))
@@ -109,8 +112,8 @@ namespace Lab_7_1
             }
         }
 
-        // Задание 4: Бинарные файлы
-        public static void FillBinaryFileWithRandomInts(string filePath, int count)
+        /// Задание 4: Бинарные файлы
+        public static void CreateBinary(string filePath, int count)
         {
             Random random = new Random();
             using (BinaryWriter writer = new BinaryWriter(File.Open(filePath, FileMode.Create)))
@@ -120,7 +123,7 @@ namespace Lab_7_1
             }
         }
 
-        public static void WriteBinaryIntsDivisibleByM(string inputPath, string outputPath, int m, int n)
+        public static void WriteBinary(string inputPath, string outputPath, int m, int n)
         {
             using (BinaryReader reader = new BinaryReader(File.Open(inputPath, FileMode.Open)))
             using (BinaryWriter writer = new BinaryWriter(File.Open(outputPath, FileMode.Create)))
@@ -134,50 +137,82 @@ namespace Lab_7_1
             }
         }
 
-        // Задание 5: Бинарные файлы и структуры
-        [Serializable]
-        public struct LuggageItem
-        {
-            public string Name;
-            public double Weight;
-        }
+        /// Задание 5: Бинарные файлы и структуры
 
-        public static void FillLuggageFileWithRandomData(string filePath, int count)
+        /// <summary>
+        /// Создает XML-файл с информацией о пассажирах.
+        /// </summary>
+        public static void CreateBag(string filePath, int count)
         {
             Random random = new Random();
-            LuggageItem[] items = new LuggageItem[count];
+
+            Passenger[] passengers = new Passenger[count];
+
             for (int i = 0; i < count; i++)
             {
-                items[i] = new LuggageItem
+                int luggageCount = random.Next(1, 4);
+
+                passengers[i] = new Passenger();
+
+                passengers[i].FullName = "Passenger" + i;
+
+                passengers[i].Luggage =
+                    new LuggageItem[luggageCount];
+
+                for (int j = 0; j < luggageCount; j++)
                 {
-                    Name = $"Item{i}",
-                    Weight = random.NextDouble() * 20
-                };
+                    passengers[i].Luggage[j].Name =
+                        "Item" + j;
+
+                    passengers[i].Luggage[j].Weight =
+                        random.Next(1, 30);
+                }
             }
-            XmlSerializer serializer = new XmlSerializer(typeof(LuggageItem[]));
-            using (FileStream stream = new FileStream(filePath, FileMode.Create))
+
+            XmlSerializer serializer =
+                new XmlSerializer(typeof(Passenger[]));
+
+            using (FileStream stream =
+                   new FileStream(filePath, FileMode.Create))
             {
-                serializer.Serialize(stream, items);
+                serializer.Serialize(stream, passengers);
             }
         }
 
-        public static bool CheckSingleLightLuggage(string filePath, double m)
+        /// <summary>
+        /// Проверяет наличие пассажира с одной единицей багажа
+        /// массой меньше заданной.
+        /// </summary>
+        public static bool CheckSingleLightLuggage(
+            string filePath,
+            double m)
         {
-            XmlSerializer serializer = new XmlSerializer(typeof(LuggageItem[]));
-            using (FileStream stream = new FileStream(filePath, FileMode.Open))
+            XmlSerializer serializer =
+                new XmlSerializer(typeof(Passenger[]));
+
+            using (FileStream stream =
+                   new FileStream(filePath, FileMode.Open))
             {
-                LuggageItem[] items = (LuggageItem[])serializer.Deserialize(stream);
-                foreach (var item in items)
-                    if (item.Weight < m)
+                Passenger[] passengers =
+                    (Passenger[])serializer.Deserialize(stream);
+
+                for (int i = 0; i < passengers.Length; i++)
+                {
+                    if (passengers[i].Luggage.Length == 1 &&
+                        passengers[i].Luggage[0].Weight < m)
+                    {
                         return true;
+                    }
+                }
             }
+
             return false;
         }
     }
 
     public static class CollectionTasks
     {
-        // Задание 6: List
+        /// Задание 6: List
         public static void MergeSortedLists(List<int> list1, List<int> list2)
         {
             int i = 0, j = 0;
@@ -195,7 +230,7 @@ namespace Lab_7_1
             list1.AddRange(result);
         }
 
-        // Задание 7: LinkedList
+        /// Задание 7: LinkedList
         public static int CountEqualNeighbors(LinkedList<int> list)
         {
             int count = 0;
@@ -210,72 +245,211 @@ namespace Lab_7_1
             return count;
         }
 
-        // Задание 8: HashSet
-        public static void AnalyzeDishOrders(HashSet<string>[] orders)
+        /// Задание 8: HashSet
+        /// <summary>
+        /// Анализирует заказы посетителей кафе.
+        /// </summary>
+        public static void AnalyzeDishOrders(
+            HashSet<string> menu,
+            HashSet<string>[] orders)
         {
-            HashSet<string> allDishes = new HashSet<string>();
-            HashSet<string> someDishes = new HashSet<string>();
-            HashSet<string> noneDishes = new HashSet<string>();
+            HashSet<string> allDishes =
+                new HashSet<string>(menu);
 
-            foreach (var order in orders)
+            HashSet<string> someDishes =
+                new HashSet<string>();
+
+            for (int i = 0; i < orders.Length; i++)
             {
-                if (order.Count > 0)
-                    someDishes.UnionWith(order);
-                else
-                    noneDishes.UnionWith(order);
+                someDishes.UnionWith(orders[i]);
+                allDishes.IntersectWith(orders[i]);
             }
-            allDishes = someDishes;
-            foreach (var order in orders)
-                allDishes.IntersectWith(order);
 
-            Console.WriteLine("Заказывали все: " + string.Join(", ", allDishes));
-            Console.WriteLine("Заказывали некоторые: " + string.Join(", ", someDishes.Except(allDishes)));
-            Console.WriteLine("Не заказывал никто: " + string.Join(", ", noneDishes));
+            HashSet<string> nobody =
+                new HashSet<string>(menu);
+
+            nobody.ExceptWith(someDishes);
+
+            Console.WriteLine("Заказывали все:");
+
+            foreach (string item in allDishes)
+            {
+                Console.WriteLine(item);
+            }
+
+            Console.WriteLine();
+
+            Console.WriteLine("Заказывали некоторые:");
+
+            foreach (string item in someDishes)
+            {
+                if (!allDishes.Contains(item))
+                {
+                    Console.WriteLine(item);
+                }
+            }
+
+            Console.WriteLine();
+
+            Console.WriteLine("Не заказывал никто:");
+
+            foreach (string item in nobody)
+            {
+                Console.WriteLine(item);
+            }
         }
 
-        // Задание 9: HashSet
-        public static void PrintAlphabeticalConsonants(string filePath)
+        /// Задание 9: HashSet
+        /// <summary>
+        /// Выводит согласные буквы,
+        /// входящие ровно в одно слово.
+        /// </summary>
+        public static void PrintAlphabeticalConsonants(
+            string filePath)
         {
-            HashSet<char> consonants = new HashSet<char> { 'б', 'в', 'г', 'д', 'ж', 'з', 'й', 'к', 'л', 'м', 'н', 'п', 'р', 'с', 'т', 'ф', 'х', 'ц', 'ч', 'ш', 'щ' };
-            Dictionary<char, int> consonantCounts = new Dictionary<char, int>();
-            foreach (var c in consonants) consonantCounts[c] = 0;
+            string consonants =
+                "бвгджзйклмнпрстфхцчшщ";
 
-            using (StreamReader reader = new StreamReader(filePath))
+            Dictionary<char, int> counts =
+                new Dictionary<char, int>();
+
+            for (int i = 0; i < consonants.Length; i++)
             {
-                string line;
-                while ((line = reader.ReadLine()) != null)
+                counts.Add(consonants[i], 0);
+            }
+
+            string text;
+
+            using (StreamReader reader =
+                   new StreamReader(filePath))
+            {
+                text = reader.ReadToEnd().ToLower();
+            }
+
+            char[] separators =
+            {
+        ' ',
+        '\r',
+        '\n',
+        '.',
+        ',',
+        ';',
+        ':',
+        '!',
+        '?',
+        '-'
+    };
+
+            string[] words =
+                text.Split(
+                    separators,
+                    StringSplitOptions.RemoveEmptyEntries);
+
+            for (int i = 0; i < words.Length; i++)
+            {
+                HashSet<char> letters =
+                    new HashSet<char>();
+
+                foreach (char c in words[i])
                 {
-                    foreach (char c in line.ToLower())
+                    if (counts.ContainsKey(c))
                     {
-                        if (consonants.Contains(c))
-                            consonantCounts[c]++;
+                        letters.Add(c);
                     }
                 }
-            }
-            foreach (var pair in consonantCounts.Where(p => p.Value == 1).OrderBy(p => p.Key))
-                Console.Write(pair.Key + " ");
-        }
 
-        // Задание 10: Dictionary/SortedList
-        public static void FindTopParticipants(string filePath, int topN)
-        {
-            Dictionary<string, int> participants = new Dictionary<string, int>();
-            using (StreamReader reader = new StreamReader(filePath))
-            {
-                string line;
-                while ((line = reader.ReadLine()) != null)
+                foreach (char c in letters)
                 {
-                    string[] parts = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                    string name = parts[0] + " " + parts[1];
-                    int total = 0;
-                    for (int i = 2; i < parts.Length; i++)
-                        total += int.Parse(parts[i]);
-                    participants[name] = total;
+                    counts[c]++;
                 }
             }
-            var topParticipants = participants.OrderByDescending(p => p.Value).Take(topN);
-            foreach (var p in topParticipants)
-                Console.WriteLine($"{p.Key}: {p.Value}");
+
+            List<char> result =
+                new List<char>();
+
+            foreach (KeyValuePair<char, int> pair in counts)
+            {
+                if (pair.Value == 1)
+                {
+                    result.Add(pair.Key);
+                }
+            }
+
+            result.Sort();
+
+            foreach (char c in result)
+            {
+                Console.Write(c + " ");
+            }
+
+            Console.WriteLine();
+        }
+
+        /// Задание 10: Dictionary/SortedList
+        /// <summary>
+        /// Выводит призеров соревнований.
+        /// </summary>
+        public static void FindTopParticipants(
+            string filePath)
+        {
+            List<string> names =
+                new List<string>();
+
+            List<int> scores =
+                new List<int>();
+
+            using (StreamReader reader =
+                   new StreamReader(filePath))
+            {
+                string line;
+
+                while ((line = reader.ReadLine()) != null)
+                {
+                    string[] parts =
+                        line.Split(
+                            ' ',
+                            StringSplitOptions.RemoveEmptyEntries);
+
+                    string fullName =
+                        parts[0] + " " + parts[1];
+
+                    int score = 0;
+
+                    for (int i = 2; i < 6; i++)
+                    {
+                        score += int.Parse(parts[i]);
+                    }
+
+                    names.Add(fullName);
+                    scores.Add(score);
+                }
+            }
+
+            List<int> sortedScores =
+                new List<int>(scores);
+
+            sortedScores.Sort();
+            sortedScores.Reverse();
+
+            int thirdPlaceScore;
+
+            if (sortedScores.Count < 3)
+            {
+                thirdPlaceScore =
+                    sortedScores[sortedScores.Count - 1];
+            }
+            else
+            {
+                thirdPlaceScore = sortedScores[2];
+            }
+
+            for (int i = 0; i < names.Count; i++)
+            {
+                if (scores[i] >= thirdPlaceScore)
+                {
+                    Console.WriteLine(names[i]);
+                }
+            }
         }
     }
 }
